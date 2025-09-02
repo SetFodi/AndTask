@@ -17,6 +17,7 @@
   function getMousePos(e: MouseEvent) {
     if (!svgElement) return { x: 0, y: 0 };
     const rect = svgElement.getBoundingClientRect();
+
     return {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
@@ -316,7 +317,6 @@
         bind:this={svgElement}
         class="w-full h-full border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-lg bg-white cursor-crosshair"
         style="min-height: 500px;"
-        viewBox="0 0 800 600"
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- Background -->
