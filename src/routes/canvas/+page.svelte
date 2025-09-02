@@ -13,6 +13,9 @@
   let startX = 0;
   let startY = 0;
   let tempShape = $state<any>(null);
+  let history = $state<{paths: string[], shapes: any[]}[]>([]);
+  let historyIndex = $state(-1);
+  let showGrid = $state(false);
 
   function getMousePos(e: MouseEvent) {
     if (!svgElement) return { x: 0, y: 0 };
@@ -22,6 +25,20 @@
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     };
+  }
+
+  function calculateArrowHead(x1: number, y1: number, x2: number, y2: number) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angle = Math.atan2(dy, dx);
+    const headLength = 12;
+
+    const x3 = x2 - headLength * Math.cos(angle - Math.PI / 6);
+    const y3 = y2 - headLength * Math.sin(angle - Math.PI / 6);
+    const x4 = x2 - headLength * Math.cos(angle + Math.PI / 6);
+    const y4 = y2 - headLength * Math.sin(angle + Math.PI / 6);
+
+    return `${x2},${y2} ${x3},${y3} ${x4},${y4}`;
   }
 
   function startDrawing(e: MouseEvent) {
@@ -83,6 +100,7 @@
     } else if (tool === 'arrow' && tempShape) {
       tempShape.x2 = pos.x;
       tempShape.y2 = pos.y;
+      tempShape.arrowHead = calculateArrowHead(tempShape.x1, tempShape.y1, tempShape.x2, tempShape.y2);
     }
 
     console.log("🖊️ Drawing at", pos);
@@ -95,14 +113,53 @@
     if (tool === 'pen' && currentPath) {
       paths = [...paths, currentPath];
       currentPath = "";
+      saveToHistory();
       console.log("✅ Added path, total paths:", paths.length);
     } else if (tempShape) {
       shapes = [...shapes, tempShape];
       tempShape = null;
+      saveToHistory();
       console.log("✅ Added shape, total shapes:", shapes.length);
     }
 
     console.log("🛑 Stopped drawing");
+  }
+
+  function saveToHistory() {
+    // Remove any future history if we're not at the end
+    if (historyIndex < history.length - 1) {
+      history = history.slice(0, historyIndex + 1);
+    }
+
+    // Add current state to history
+    history = [...history, { paths: [...paths], shapes: [...shapes] }];
+    historyIndex = history.length - 1;
+
+    // Limit history to 50 steps
+    if (history.length > 50) {
+      history = history.slice(-50);
+      historyIndex = history.length - 1;
+    }
+  }
+
+  function undo() {
+    if (historyIndex > 0) {
+      historyIndex--;
+      const state = history[historyIndex];
+      paths = [...state.paths];
+      shapes = [...state.shapes];
+      console.log("↶ Undo - step", historyIndex);
+    }
+  }
+
+  function redo() {
+    if (historyIndex < history.length - 1) {
+      historyIndex++;
+      const state = history[historyIndex];
+      paths = [...state.paths];
+      shapes = [...state.shapes];
+      console.log("↷ Redo - step", historyIndex);
+    }
   }
 
   function setTool(newTool: string) {
@@ -131,7 +188,54 @@
     paths = [];
     shapes = [];
     currentPath = "";
+    tempShape = null;
+    saveToHistory();
     console.log("🧹 Canvas cleared");
+  }
+
+  function toggleGrid() {
+    showGrid = !showGrid;
+    console.log("🔲 Grid toggled:", showGrid);
+  }
+
+  // Keyboard shortcuts
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 'z':
+          e.preventDefault();
+          if (e.shiftKey) {
+            redo();
+          } else {
+            undo();
+          }
+          break;
+        case 'y':
+          e.preventDefault();
+          redo();
+          break;
+        case 'g':
+          e.preventDefault();
+          toggleGrid();
+          break;
+      }
+    }
+
+    // Tool shortcuts
+    switch (e.key) {
+      case '1':
+        setTool('pen');
+        break;
+      case '2':
+        setTool('rectangle');
+        break;
+      case '3':
+        setTool('circle');
+        break;
+      case '4':
+        setTool('arrow');
+        break;
+    }
   }
 
   function exportPNG() {
@@ -171,6 +275,9 @@
   onMount(() => {
     console.log("🚀 Canvas component mounted");
 
+    // Initialize history with empty state
+    saveToHistory();
+
     if (svgElement) {
       svgElement.addEventListener('mousedown', startDrawing);
       svgElement.addEventListener('mousemove', draw);
@@ -179,14 +286,18 @@
       console.log("✅ Event listeners attached to SVG");
     }
 
+    // Add keyboard shortcuts
+    window.addEventListener('keydown', handleKeydown);
+
     return () => {
       if (svgElement) {
         svgElement.removeEventListener('mousedown', startDrawing);
         svgElement.removeEventListener('mousemove', draw);
         svgElement.removeEventListener('mouseup', stopDrawing);
         svgElement.removeEventListener('mouseleave', stopDrawing);
-        console.log("🧹 Event listeners removed");
       }
+      window.removeEventListener('keydown', handleKeydown);
+      console.log("🧹 Event listeners removed");
     };
   });
 
@@ -220,6 +331,7 @@
             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
           </svg>
           Pen
+          <span class="text-xs opacity-60 ml-1">1</span>
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'rectangle' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
@@ -229,6 +341,7 @@
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
           </svg>
           Rectangle
+          <span class="text-xs opacity-60 ml-1">2</span>
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'circle' ? 'bg-green-500 text-white shadow-lg shadow-green-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
@@ -238,6 +351,7 @@
             <circle cx="12" cy="12" r="10"/>
           </svg>
           Circle
+          <span class="text-xs opacity-60 ml-1">3</span>
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'arrow' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
@@ -248,6 +362,7 @@
             <polyline points="12,5 19,12 12,19"/>
           </svg>
           Arrow
+          <span class="text-xs opacity-60 ml-1">4</span>
         </button>
       </div>
 
@@ -288,6 +403,41 @@
 
       <!-- Actions -->
       <div class="flex items-center gap-2">
+        <!-- Undo/Redo -->
+        <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg">
+          <button
+            class="text-sm px-2 py-1.5 rounded transition-all {historyIndex > 0 ? 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300' : 'text-zinc-400 dark:text-zinc-600 cursor-not-allowed'}"
+            onclick={undo}
+            disabled={historyIndex <= 0}
+            title="Undo (Ctrl+Z)"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          <button
+            class="text-sm px-2 py-1.5 rounded transition-all {historyIndex < history.length - 1 ? 'hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300' : 'text-zinc-400 dark:text-zinc-600 cursor-not-allowed'}"
+            onclick={redo}
+            disabled={historyIndex >= history.length - 1}
+            title="Redo (Ctrl+Y)"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Grid Toggle -->
+        <button
+          class="text-sm px-3 py-2 rounded-lg transition-all {showGrid ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
+          onclick={toggleGrid}
+          title="Toggle Grid (Ctrl+G)"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+          </svg>
+        </button>
+
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 border border-red-200 dark:border-red-800/50"
           onclick={clearCanvas}
@@ -319,8 +469,20 @@
         style="min-height: 500px;"
         xmlns="http://www.w3.org/2000/svg"
       >
+        <!-- Grid Pattern Definition -->
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" stroke-width="1"/>
+          </pattern>
+        </defs>
+
         <!-- Background -->
         <rect width="100%" height="100%" fill="white" />
+
+        <!-- Grid (optional) -->
+        {#if showGrid}
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        {/if}
 
         <!-- Draw all completed paths -->
         {#each paths as path}
@@ -377,10 +539,13 @@
                 stroke={shape.stroke}
                 stroke-width={shape.strokeWidth}
               />
-              <polygon
-                points="{shape.x2},{shape.y2} {shape.x2-10},{shape.y2-5} {shape.x2-10},{shape.y2+5}"
-                fill={shape.stroke}
-              />
+              <!-- Dynamic arrowhead based on direction -->
+              {#if shape.arrowHead}
+                <polygon
+                  points={shape.arrowHead}
+                  fill={shape.stroke}
+                />
+              {/if}
             </g>
           {/if}
         {/each}
@@ -418,10 +583,13 @@
                 stroke={tempShape.stroke}
                 stroke-width={tempShape.strokeWidth}
               />
-              <polygon
-                points="{tempShape.x2},{tempShape.y2} {tempShape.x2-10},{tempShape.y2-5} {tempShape.x2-10},{tempShape.y2+5}"
-                fill={tempShape.stroke}
-              />
+              <!-- Dynamic arrowhead for temp shape -->
+              {#if tempShape.arrowHead}
+                <polygon
+                  points={tempShape.arrowHead}
+                  fill={tempShape.stroke}
+                />
+              {/if}
             </g>
           {/if}
         {/if}
