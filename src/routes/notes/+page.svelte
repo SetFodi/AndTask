@@ -86,31 +86,43 @@
   }
 
   async function deleteCurrentNote() {
-    alert('Delete button clicked!'); // Test if function is called
+    console.log('🔴 DELETE BUTTON CLICKED!');
+
     if (!selectedNote) {
+      console.log('❌ No note selected');
       alert('No note selected');
       return;
     }
-    console.log('Attempting to delete note:', selectedNote);
-    if (!confirm('Are you sure you want to delete this note?')) return;
+
+    console.log('✅ Note is selected, proceeding with deletion...');
 
     try {
       const toDeleteId = selectedNote.id;
-      console.log('Deleting note with ID:', toDeleteId);
+      console.log('🗑️ Deleting note with ID:', toDeleteId);
+
+      // Delete from database
       await deleteNote(toDeleteId);
-      console.log('Note deleted successfully');
+      console.log('✅ Deleted from database');
+
+      // Remove from UI
       notes = notes.filter(n => n.id !== toDeleteId);
-      console.log('Updated notes list:', notes);
+      console.log('✅ Updated notes list:', notes);
+
       if (notes.length > 0) {
         selectNote(notes[0]);
+        console.log('✅ Selected first remaining note');
       } else {
         selectedNote = null;
         content = "";
         title = "";
+        console.log('✅ No notes left, cleared selection');
       }
+
+      console.log('✅ Delete operation completed successfully');
+
     } catch (error: unknown) {
-      console.error('Failed to delete note:', error);
-      alert('Failed to delete note: ' + error.message);
+      console.error('❌ Failed to delete note:', error);
+      alert('Failed to delete note: ' + (error as Error).message);
     }
   }
 

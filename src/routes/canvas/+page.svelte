@@ -2,124 +2,124 @@
   import { onMount } from "svelte";
   import { scale } from "svelte/transition";
 
-  let canvas: HTMLCanvasElement | null = null;
-  let ctx: CanvasRenderingContext2D | null = null;
-
+  let svgElement: SVGSVGElement | null = null;
   let tool = $state("pen");
   let brushColor = $state("#10b981");
   let brushSize = $state(3);
   let isDrawing = $state(false);
-  let lastX = 0;
-  let lastY = 0;
+  let currentPath = $state("");
+  let paths = $state<string[]>([]);
+  let shapes = $state<any[]>([]);
+  let startX = 0;
+  let startY = 0;
+  let tempShape = $state<any>(null);
 
-  function setupCanvas() {
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-
-    ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    // Fill white background
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    console.log("Canvas setup complete", { width: canvas.width, height: canvas.height });
+  function getMousePos(e: MouseEvent) {
+    if (!svgElement) return { x: 0, y: 0 };
+    const rect = svgElement.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
   }
 
   function startDrawing(e: MouseEvent) {
-    if (!ctx || !canvas) return;
-
     isDrawing = true;
-    const rect = canvas.getBoundingClientRect();
-    lastX = e.clientX - rect.left;
-    lastY = e.clientY - rect.top;
+    const pos = getMousePos(e);
+    startX = pos.x;
+    startY = pos.y;
 
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
+    if (tool === 'pen') {
+      currentPath = `M ${pos.x} ${pos.y}`;
+    } else if (tool === 'rectangle') {
+      tempShape = {
+        type: 'rectangle',
+        x: pos.x,
+        y: pos.y,
+        width: 0,
+        height: 0,
+        stroke: brushColor,
+        strokeWidth: brushSize
+      };
+    } else if (tool === 'circle') {
+      tempShape = {
+        type: 'circle',
+        cx: pos.x,
+        cy: pos.y,
+        r: 0,
+        stroke: brushColor,
+        strokeWidth: brushSize
+      };
+    } else if (tool === 'arrow') {
+      tempShape = {
+        type: 'arrow',
+        x1: pos.x,
+        y1: pos.y,
+        x2: pos.x,
+        y2: pos.y,
+        stroke: brushColor,
+        strokeWidth: brushSize
+      };
+    }
 
-    console.log("Started drawing at", { x: lastX, y: lastY });
+    console.log("🎨 Started drawing at", pos, "with tool:", tool);
   }
 
   function draw(e: MouseEvent) {
-    if (!isDrawing || !ctx || !canvas) return;
+    if (!isDrawing) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const pos = getMousePos(e);
 
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
+    if (tool === 'pen') {
+      currentPath += ` L ${pos.x} ${pos.y}`;
+    } else if (tool === 'rectangle' && tempShape) {
+      tempShape.width = pos.x - startX;
+      tempShape.height = pos.y - startY;
+    } else if (tool === 'circle' && tempShape) {
+      const dx = pos.x - startX;
+      const dy = pos.y - startY;
+      tempShape.r = Math.sqrt(dx * dx + dy * dy);
+    } else if (tool === 'arrow' && tempShape) {
+      tempShape.x2 = pos.x;
+      tempShape.y2 = pos.y;
+    }
 
-    lastX = x;
-    lastY = y;
+    console.log("🖊️ Drawing at", pos);
   }
 
   function stopDrawing() {
     if (!isDrawing) return;
     isDrawing = false;
-    console.log("Stopped drawing");
+
+    if (tool === 'pen' && currentPath) {
+      paths = [...paths, currentPath];
+      currentPath = "";
+      console.log("✅ Added path, total paths:", paths.length);
+    } else if (tempShape) {
+      shapes = [...shapes, tempShape];
+      tempShape = null;
+      console.log("✅ Added shape, total shapes:", shapes.length);
+    }
+
+    console.log("🛑 Stopped drawing");
   }
 
   function setTool(newTool: string) {
     tool = newTool;
-    console.log("Tool changed to:", tool);
+    console.log("🔧 Tool changed to:", tool);
   }
 
   function setBrushColor(color: string) {
     brushColor = color;
-    console.log("Color changed to:", color);
+    console.log("🎨 Color changed to:", color);
   }
 
   function setBrushSize(size: number) {
     brushSize = size;
-    console.log("Size changed to:", size);
+    console.log("📏 Size changed to:", size);
   }
 
-  function addRectangle() {
-    if (!ctx || !canvas) return;
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.strokeRect(100, 100, 100, 100);
-    console.log("Added rectangle");
-  }
-
-  function addCircle() {
-    if (!ctx || !canvas) return;
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.beginPath();
-    ctx.arc(150, 150, 50, 0, 2 * Math.PI);
-    ctx.stroke();
-    console.log("Added circle");
-  }
-
-  function addArrow() {
-    if (!ctx || !canvas) return;
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.beginPath();
-    ctx.moveTo(50, 200);
-    ctx.lineTo(150, 200);
-    ctx.stroke();
-    // Arrow head
-    ctx.beginPath();
-    ctx.moveTo(150, 200);
-    ctx.lineTo(140, 195);
-    ctx.moveTo(150, 200);
-    ctx.lineTo(140, 205);
-    ctx.stroke();
-    console.log("Added arrow");
-  }
+  // These functions are no longer needed since shapes are drawn interactively
 
 
 
@@ -127,39 +127,64 @@
 
 
   function clearCanvas() {
-    if (!ctx || !canvas) return;
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    console.log("Canvas cleared");
+    paths = [];
+    shapes = [];
+    currentPath = "";
+    console.log("🧹 Canvas cleared");
   }
 
   function exportPNG() {
-    if (!canvas) return;
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = 'canvas.png';
-    a.click();
+    if (!svgElement) return;
+
+    // Create a canvas to convert SVG to PNG
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 600;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      const dataURL = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = 'canvas.png';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+
+    console.log("💾 Exporting canvas as PNG");
   }
 
   onMount(() => {
-    setTimeout(() => {
-      setupCanvas();
+    console.log("🚀 Canvas component mounted");
 
-      if (canvas) {
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-      }
-    }, 100);
+    if (svgElement) {
+      svgElement.addEventListener('mousedown', startDrawing);
+      svgElement.addEventListener('mousemove', draw);
+      svgElement.addEventListener('mouseup', stopDrawing);
+      svgElement.addEventListener('mouseleave', stopDrawing);
+      console.log("✅ Event listeners attached to SVG");
+    }
 
     return () => {
-      if (canvas) {
-        canvas.removeEventListener('mousedown', startDrawing);
-        canvas.removeEventListener('mousemove', draw);
-        canvas.removeEventListener('mouseup', stopDrawing);
-        canvas.removeEventListener('mouseout', stopDrawing);
+      if (svgElement) {
+        svgElement.removeEventListener('mousedown', startDrawing);
+        svgElement.removeEventListener('mousemove', draw);
+        svgElement.removeEventListener('mouseup', stopDrawing);
+        svgElement.removeEventListener('mouseleave', stopDrawing);
+        console.log("🧹 Event listeners removed");
       }
     };
   });
@@ -197,7 +222,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'rectangle' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => { setTool('rectangle'); addRectangle(); }}
+          onclick={() => setTool('rectangle')}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -206,7 +231,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'circle' ? 'bg-green-500 text-white shadow-lg shadow-green-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => { setTool('circle'); addCircle(); }}
+          onclick={() => setTool('circle')}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10"/>
@@ -215,7 +240,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'arrow' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => { setTool('arrow'); addArrow(); }}
+          onclick={() => setTool('arrow')}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -287,11 +312,120 @@
   <!-- Canvas Container -->
   <div class="flex-1 card p-6 relative">
     <div class="w-full h-full rounded-xl bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 relative overflow-hidden" style="min-height: 500px;">
-      <canvas
-        bind:this={canvas}
-        class="w-full h-full border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-lg bg-white"
+      <svg
+        bind:this={svgElement}
+        class="w-full h-full border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-lg bg-white cursor-crosshair"
         style="min-height: 500px;"
-      ></canvas>
+        viewBox="0 0 800 600"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <!-- Background -->
+        <rect width="100%" height="100%" fill="white" />
+
+        <!-- Draw all completed paths -->
+        {#each paths as path}
+          <path
+            d={path}
+            stroke={brushColor}
+            stroke-width={brushSize}
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        {/each}
+
+        <!-- Draw current path being drawn -->
+        {#if currentPath && isDrawing}
+          <path
+            d={currentPath}
+            stroke={brushColor}
+            stroke-width={brushSize}
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        {/if}
+
+        <!-- Draw all shapes -->
+        {#each shapes as shape}
+          {#if shape.type === 'rectangle'}
+            <rect
+              x={shape.x}
+              y={shape.y}
+              width={shape.width}
+              height={shape.height}
+              stroke={shape.stroke}
+              stroke-width={shape.strokeWidth}
+              fill="none"
+            />
+          {:else if shape.type === 'circle'}
+            <circle
+              cx={shape.cx}
+              cy={shape.cy}
+              r={shape.r}
+              stroke={shape.stroke}
+              stroke-width={shape.strokeWidth}
+              fill="none"
+            />
+          {:else if shape.type === 'arrow'}
+            <g>
+              <line
+                x1={shape.x1}
+                y1={shape.y1}
+                x2={shape.x2}
+                y2={shape.y2}
+                stroke={shape.stroke}
+                stroke-width={shape.strokeWidth}
+              />
+              <polygon
+                points="{shape.x2},{shape.y2} {shape.x2-10},{shape.y2-5} {shape.x2-10},{shape.y2+5}"
+                fill={shape.stroke}
+              />
+            </g>
+          {/if}
+        {/each}
+
+        <!-- Draw temporary shape while drawing -->
+        {#if tempShape && isDrawing}
+          {#if tempShape.type === 'rectangle'}
+            <rect
+              x={tempShape.x}
+              y={tempShape.y}
+              width={tempShape.width}
+              height={tempShape.height}
+              stroke={tempShape.stroke}
+              stroke-width={tempShape.strokeWidth}
+              fill="none"
+              opacity="0.7"
+            />
+          {:else if tempShape.type === 'circle'}
+            <circle
+              cx={tempShape.cx}
+              cy={tempShape.cy}
+              r={tempShape.r}
+              stroke={tempShape.stroke}
+              stroke-width={tempShape.strokeWidth}
+              fill="none"
+              opacity="0.7"
+            />
+          {:else if tempShape.type === 'arrow'}
+            <g opacity="0.7">
+              <line
+                x1={tempShape.x1}
+                y1={tempShape.y1}
+                x2={tempShape.x2}
+                y2={tempShape.y2}
+                stroke={tempShape.stroke}
+                stroke-width={tempShape.strokeWidth}
+              />
+              <polygon
+                points="{tempShape.x2},{tempShape.y2} {tempShape.x2-10},{tempShape.y2-5} {tempShape.x2-10},{tempShape.y2+5}"
+                fill={tempShape.stroke}
+              />
+            </g>
+          {/if}
+        {/if}
+      </svg>
     </div>
     
     <!-- Canvas Overlay Instructions -->
