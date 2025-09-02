@@ -5,232 +5,166 @@
   let canvas: HTMLCanvasElement | null = null;
   let ctx: CanvasRenderingContext2D | null = null;
 
-  let tool = $state("pen"); // pen, rectangle, circle, arrow, text
+  let tool = $state("pen");
   let brushColor = $state("#10b981");
   let brushSize = $state(3);
-  let drawing = $state(false);
-  let startX = 0, startY = 0;
-  let currentX = 0, currentY = 0;
-  let elements: any[] = $state([]);
-  let tempElement: any = null;
+  let isDrawing = $state(false);
+  let lastX = 0;
+  let lastY = 0;
 
-  function setComposite() {
-    if (!ctx) return;
-    ctx.globalCompositeOperation = "source-over";
-  }
-
-  function resizeCanvas() {
+  function setupCanvas() {
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(rect.width * dpr);
-    const h = Math.floor(rect.height * dpr);
 
-    canvas.width = w;
-    canvas.height = h;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.scale(dpr, dpr);
+
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+
+    // Fill white background
     ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-    setComposite();
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    redrawCanvas();
+    console.log("Canvas setup complete", { width: canvas.width, height: canvas.height });
   }
 
-  function redrawCanvas() {
+  function startDrawing(e: MouseEvent) {
     if (!ctx || !canvas) return;
-    const dpr = window.devicePixelRatio || 1;
 
-    // Clear and fill white background
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    lastX = e.clientX - rect.left;
+    lastY = e.clientY - rect.top;
 
-    // Draw all elements
-    elements.forEach(element => drawElement(element));
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
 
-    // Draw temp element if drawing
-    if (tempElement) {
-      drawElement(tempElement);
-    }
+    console.log("Started drawing at", { x: lastX, y: lastY });
   }
 
-  function drawElement(element: any) {
-    if (!ctx) return;
-    const context = ctx as CanvasRenderingContext2D;
+  function draw(e: MouseEvent) {
+    if (!isDrawing || !ctx || !canvas) return;
 
-    context.strokeStyle = element.color;
-    context.lineWidth = element.size;
-    context.fillStyle = element.color;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    switch (element.type) {
-      case 'pen':
-        context.beginPath();
-        element.points.forEach((point: any, i: number) => {
-          if (i === 0) context.moveTo(point.x, point.y);
-          else context.lineTo(point.x, point.y);
-        });
-        context.stroke();
-        break;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
 
-      case 'rectangle':
-        context.strokeRect(element.x, element.y, element.width, element.height);
-        break;
-
-      case 'circle':
-        context.beginPath();
-        const radius = Math.sqrt(element.width * element.width + element.height * element.height) / 2;
-        context.arc(element.x + element.width/2, element.y + element.height/2, radius, 0, 2 * Math.PI);
-        context.stroke();
-        break;
-
-      case 'arrow':
-        drawArrow(element.x, element.y, element.x + element.width, element.y + element.height);
-        break;
-    }
+    lastX = x;
+    lastY = y;
   }
 
-  function drawArrow(fromX: number, fromY: number, toX: number, toY: number) {
-    if (!ctx) return;
-    const context = ctx as CanvasRenderingContext2D;
-
-    const headlen = 10;
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    const angle = Math.atan2(dy, dx);
-
-    // Draw line
-    context.beginPath();
-    context.moveTo(fromX, fromY);
-    context.lineTo(toX, toY);
-    context.stroke();
-
-    // Draw arrowhead
-    context.beginPath();
-    context.moveTo(toX, toY);
-    context.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
-    context.moveTo(toX, toY);
-    context.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
-    context.stroke();
+  function stopDrawing() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    console.log("Stopped drawing");
   }
 
-  onMount(() => {
-    setTimeout(() => {
-      resizeCanvas();
-      const ro = new ResizeObserver(() => resizeCanvas());
-      if (canvas && canvas.parentElement) ro.observe(canvas.parentElement);
-      window.addEventListener("pointerup", onPointerUp);
+  function setTool(newTool: string) {
+    tool = newTool;
+    console.log("Tool changed to:", tool);
+  }
 
-      return () => {
-        ro.disconnect();
-        window.removeEventListener("pointerup", onPointerUp);
-      };
-    }, 100);
-  });
+  function setBrushColor(color: string) {
+    brushColor = color;
+    console.log("Color changed to:", color);
+  }
 
-  function onPointerDown(e: PointerEvent) {
+  function setBrushSize(size: number) {
+    brushSize = size;
+    console.log("Size changed to:", size);
+  }
+
+  function addRectangle() {
     if (!ctx || !canvas) return;
-    e.preventDefault();
-    drawing = true;
-    const rect = canvas.getBoundingClientRect();
-    startX = e.clientX - rect.left;
-    startY = e.clientY - rect.top;
-    currentX = startX;
-    currentY = startY;
-
-    if (tool === 'pen') {
-      tempElement = {
-        type: 'pen',
-        color: brushColor,
-        size: brushSize,
-        points: [{ x: startX, y: startY }]
-      };
-    } else {
-      tempElement = {
-        type: tool,
-        color: brushColor,
-        size: brushSize,
-        x: startX,
-        y: startY,
-        width: 0,
-        height: 0
-      };
-    }
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    ctx.strokeRect(100, 100, 100, 100);
+    console.log("Added rectangle");
   }
 
-  function onPointerMove(e: PointerEvent) {
-    if (!drawing || !ctx || !canvas) return;
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    currentX = e.clientX - rect.left;
-    currentY = e.clientY - rect.top;
-
-    if (tool === 'pen' && tempElement) {
-      tempElement.points.push({ x: currentX, y: currentY });
-    } else if (tempElement) {
-      tempElement.width = currentX - startX;
-      tempElement.height = currentY - startY;
-    }
-
-    redrawCanvas();
+  function addCircle() {
+    if (!ctx || !canvas) return;
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    ctx.beginPath();
+    ctx.arc(150, 150, 50, 0, 2 * Math.PI);
+    ctx.stroke();
+    console.log("Added circle");
   }
 
-  function onPointerUp() {
-    if (!drawing || !ctx || !canvas) return;
-    drawing = false;
-
-    if (tempElement) {
-      elements.push({ ...tempElement });
-      tempElement = null;
-    }
-
-    redrawCanvas();
-    autosave();
+  function addArrow() {
+    if (!ctx || !canvas) return;
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    ctx.beginPath();
+    ctx.moveTo(50, 200);
+    ctx.lineTo(150, 200);
+    ctx.stroke();
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(150, 200);
+    ctx.lineTo(140, 195);
+    ctx.moveTo(150, 200);
+    ctx.lineTo(140, 205);
+    ctx.stroke();
+    console.log("Added arrow");
   }
 
-  function autosave() {
-    if (!canvas) return;
-    try {
-      const data = JSON.stringify(elements);
-      localStorage.setItem("andt_canvas_elements", data);
-    } catch (e) {}
-  }
+
+
+
+
 
   function clearCanvas() {
-    elements = [];
-    tempElement = null;
-    redrawCanvas();
-    localStorage.removeItem("andt_canvas_elements");
-  }
-
-  function loadCanvas() {
-    try {
-      const saved = localStorage.getItem("andt_canvas_elements");
-      if (saved) {
-        elements = JSON.parse(saved);
-        redrawCanvas();
-      }
-    } catch (e) {}
+    if (!ctx || !canvas) return;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    console.log("Canvas cleared");
   }
 
   function exportPNG() {
     if (!canvas) return;
-    const data = canvas.toDataURL("image/png");
-    const a = document.createElement("a");
-    a.href = data;
-    a.download = "canvas.png";
+    const dataURL = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = 'canvas.png';
     a.click();
   }
 
-  // Load saved elements on mount
   onMount(() => {
     setTimeout(() => {
-      loadCanvas();
-    }, 200);
+      setupCanvas();
+
+      if (canvas) {
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+      }
+    }, 100);
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('mousedown', startDrawing);
+        canvas.removeEventListener('mousemove', draw);
+        canvas.removeEventListener('mouseup', stopDrawing);
+        canvas.removeEventListener('mouseout', stopDrawing);
+      }
+    };
   });
+
+
 </script>
 
 <div class="h-full flex flex-col gap-6" transition:scale={{ duration: 300, delay: 100 }}>
@@ -254,7 +188,7 @@
       <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg">
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'pen' ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => (tool = 'pen')}
+          onclick={() => setTool('pen')}
         >
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -263,7 +197,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'rectangle' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => (tool = 'rectangle')}
+          onclick={() => { setTool('rectangle'); addRectangle(); }}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -272,7 +206,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'circle' ? 'bg-green-500 text-white shadow-lg shadow-green-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => (tool = 'circle')}
+          onclick={() => { setTool('circle'); addCircle(); }}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10"/>
@@ -281,7 +215,7 @@
         </button>
         <button
           class="text-sm px-3 py-2 rounded-lg transition-all {tool === 'arrow' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25' : 'bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700'}"
-          onclick={() => (tool = 'arrow')}
+          onclick={() => { setTool('arrow'); addArrow(); }}
         >
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -295,10 +229,11 @@
       <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-zinc-900 dark:text-zinc-300" for="brushColor">Color</label>
         <div class="relative">
-          <input 
-            id="brushColor" 
-            type="color" 
-            bind:value={brushColor} 
+          <input
+            id="brushColor"
+            type="color"
+            bind:value={brushColor}
+            onchange={() => setBrushColor(brushColor)}
             class="w-10 h-10 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 cursor-pointer hover:scale-105 transition-transform shadow-lg"
           />
           <div class="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
@@ -310,13 +245,14 @@
         <label class="text-sm font-medium text-zinc-900 dark:text-zinc-300" for="brushSize">Size</label>
         <div class="flex items-center gap-2">
           <span class="text-xs text-zinc-800 dark:text-zinc-400">{brushSize}px</span>
-          <input 
-            id="brushSize" 
-            type="range" 
-            min="1" 
-            max="32" 
-            step="1" 
-            bind:value={brushSize} 
+          <input
+            id="brushSize"
+            type="range"
+            min="1"
+            max="32"
+            step="1"
+            bind:value={brushSize}
+            oninput={() => setBrushSize(brushSize)}
             class="w-20 accent-purple-500"
           />
         </div>
@@ -353,16 +289,13 @@
     <div class="w-full h-full rounded-xl bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 relative overflow-hidden" style="min-height: 500px;">
       <canvas
         bind:this={canvas}
-        class="w-full h-full block touch-none cursor-crosshair"
-        onpointerdown={onPointerDown}
-        onpointermove={onPointerMove}
-        onpointerup={onPointerUp}
-        style="background: white;"
+        class="w-full h-full border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-lg bg-white"
+        style="min-height: 500px;"
       ></canvas>
     </div>
     
     <!-- Canvas Overlay Instructions -->
-    {#if !drawing}
+    {#if !isDrawing}
       <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
         <div class="bg-black/5 dark:bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2">
           <p class="text-xs text-zinc-800 dark:text-zinc-400">

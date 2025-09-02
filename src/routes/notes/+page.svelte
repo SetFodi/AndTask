@@ -86,13 +86,21 @@
   }
 
   async function deleteCurrentNote() {
-    if (!selectedNote) return;
+    alert('Delete button clicked!'); // Test if function is called
+    if (!selectedNote) {
+      alert('No note selected');
+      return;
+    }
+    console.log('Attempting to delete note:', selectedNote);
     if (!confirm('Are you sure you want to delete this note?')) return;
 
     try {
       const toDeleteId = selectedNote.id;
+      console.log('Deleting note with ID:', toDeleteId);
       await deleteNote(toDeleteId);
+      console.log('Note deleted successfully');
       notes = notes.filter(n => n.id !== toDeleteId);
+      console.log('Updated notes list:', notes);
       if (notes.length > 0) {
         selectNote(notes[0]);
       } else {
@@ -102,20 +110,11 @@
       }
     } catch (error: unknown) {
       console.error('Failed to delete note:', error);
+      alert('Failed to delete note: ' + error.message);
     }
   }
 
-  // Auto-save with debounce
-  let saveTimeout: number;
-  $effect(() => {
-    if (!selectedNote || (!title && !content)) return;
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      saveCurrentNote();
-    }, 2000); // Increased to 2 seconds
-
-    return () => clearTimeout(saveTimeout);
-  });
+  // Remove auto-save - we'll use manual save button instead
 
   function insertMarkdown(syntax: string) {
     const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
@@ -168,6 +167,7 @@
         <button
           class="btn-primary text-sm px-3 py-2"
           onclick={createNewNote}
+          disabled={loading}
         >
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
@@ -290,15 +290,34 @@
               </button>
             </div>
 
+            <!-- Save Button -->
+            <button
+              class="text-sm px-3 py-2 rounded-lg transition-all bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/25"
+              onclick={saveCurrentNote}
+              disabled={saving}
+            >
+              {#if saving}
+                <svg class="w-4 h-4 animate-spin" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+              {:else}
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
+                </svg>
+              {/if}
+              Save
+            </button>
+
             <!-- Delete Button -->
             <button
-              class="text-sm px-3 py-2 rounded-lg transition-all bg-zinc-100 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 border border-red-200 dark:border-red-800/50"
+              class="text-sm px-3 py-2 rounded-lg transition-all bg-red-500 hover:bg-red-600 text-white"
               onclick={deleteCurrentNote}
               aria-label="Delete note"
             >
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
               </svg>
+              Delete
             </button>
           </div>
         </div>

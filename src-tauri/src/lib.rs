@@ -48,7 +48,7 @@ pub fn run() {
         },
         Migration {
             version: 4,
-            description: "create_fts_virtual_table",
+            description: "create_fts_virtual_table_v2",
             sql: "CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(
                 item_type,
                 item_id,
