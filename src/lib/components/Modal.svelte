@@ -218,7 +218,7 @@
     background: rgba(0, 0, 0, 0.05);
   }
   
-  html.dark .modal-close:hover {
+  :global(html.dark) .modal-close:hover {
     background: rgba(255, 255, 255, 0.05);
   }
   

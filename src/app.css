@@ -382,6 +382,7 @@ html.dark {
   /* Hover effects */
   .hover-lift {
     transition: all var(--duration-normal) var(--ease-spring);
+    will-change: transform, filter;
   }
   
   .hover-lift:hover {
