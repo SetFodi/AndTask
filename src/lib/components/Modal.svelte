@@ -160,6 +160,7 @@
 {/if}
 
 <style>
+  @reference "../../app.css";
   .modal-backdrop {
     @apply fixed z-50 flex items-center justify-center p-4;
     top: 0;

@@ -287,6 +287,7 @@
 </Modal>
 
 <style>
+  @reference "../../app.css";
   .data-manager {
     @apply w-full;
   }
