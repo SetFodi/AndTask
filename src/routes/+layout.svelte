@@ -34,6 +34,7 @@
 
   // Base navigation items used for default palette view and filtering
   const baseNavItems = [
+    { id: "nav-dashboard", type: "nav", title: "Go to Dashboard", path: "/dashboard" },
     { id: "nav-todo", type: "nav", title: "Go to Todo", path: "/todo" },
     { id: "nav-notes", type: "nav", title: "Go to Notes", path: "/notes" },
     { id: "nav-canvas", type: "nav", title: "Go to Canvas", path: "/canvas" },
@@ -175,6 +176,15 @@
       
       <!-- Navigation -->
       <nav class="flex-1 space-y-2">
+        <a href="/dashboard" class="sidebar-link group {$page.url.pathname === '/dashboard' ? 'active' : ''}">
+          <div class="w-5 h-5 text-zinc-500 group-hover:text-indigo-500 transition-colors">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+            </svg>
+          </div>
+          <span class="hidden md:block font-medium">Dashboard</span>
+        </a>
+        
         <a href="/todo" class="sidebar-link group {$page.url.pathname === '/todo' ? 'active' : ''}">
           <div class="w-5 h-5 text-zinc-500 group-hover:text-blue-500 transition-colors">
             <svg fill="currentColor" viewBox="0 0 20 20">
@@ -183,6 +193,7 @@
           </div>
           <span class="hidden md:block font-medium">Todo</span>
         </a>
+        
         <a href="/notes" class="sidebar-link group {$page.url.pathname === '/notes' ? 'active' : ''}">
           <div class="w-5 h-5 text-zinc-500 group-hover:text-green-500 transition-colors">
             <svg fill="currentColor" viewBox="0 0 20 20">

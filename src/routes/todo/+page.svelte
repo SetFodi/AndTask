@@ -3,6 +3,9 @@
   import { dndzone } from "svelte-dnd-action";
   import { scale } from "svelte/transition";
   import { getAllTodos, addTodo, updateTodo, deleteTodo, type Todo } from "$lib/database";
+  import Button from "$lib/components/Button.svelte";
+  import Badge from "$lib/components/Badge.svelte";
+  import Progress from "$lib/components/Progress.svelte";
 
   let newText = $state("");
   let todos = $state<Todo[]>([]);
@@ -100,15 +103,10 @@
         <h1 class="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">Todo Manager</h1>
         <p class="text-sm text-zinc-600 dark:text-zinc-400">Organize your tasks with drag & drop</p>
       </div>
-      <div class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-        <div class="flex items-center gap-1">
-          <div class="w-2 h-2 rounded-full bg-green-500"></div>
-          {todos.filter(t => t.done).length} done
-        </div>
-        <div class="flex items-center gap-1">
-          <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-          {todos.filter(t => !t.done).length} active
-        </div>
+      <div class="flex items-center gap-3">
+        <Badge variant="success" dot>{todos.filter(t => t.done).length} done</Badge>
+        <Badge variant="primary" dot>{todos.filter(t => !t.done).length} active</Badge>
+        <Badge variant="info" outline size="sm">{Math.round((todos.filter(t => t.done).length / Math.max(todos.length, 1)) * 100)}% complete</Badge>
       </div>
     </div>
 
@@ -126,21 +124,39 @@
           ↵
         </div>
       </div>
-      <button
-        class="btn-primary"
-        onclick={addTodoHandler}
-      >
+      <Button variant="primary" onclick={addTodoHandler}>
         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
         </svg>
         Add Task
-      </button>
+      </Button>
     </div>
   </div>
 
+  <!-- Progress Overview -->
+  {#if todos.length > 0}
+    <div class="glass rounded-lg p-4 animate-fade-in" style="animation-delay: 0.1s">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Overall Progress</span>
+        <Badge variant="success" size="sm">{todos.filter(t => t.done).length} of {todos.length} completed</Badge>
+      </div>
+      <Progress 
+        value={todos.filter(t => t.done).length} 
+        max={todos.length} 
+        variant="success" 
+        size="md"
+        gradient
+        animated
+        showValue
+      >
+        Task Completion
+      </Progress>
+    </div>
+  {/if}
+  
   <!-- Keyboard Shortcuts Help -->
   {#if todos.length > 0}
-    <div class="glass rounded-lg p-3 text-xs text-zinc-600 dark:text-zinc-400 animate-fade-in" style="animation-delay: 0.1s">
+    <div class="glass rounded-lg p-3 text-xs text-zinc-600 dark:text-zinc-400 animate-fade-in" style="animation-delay: 0.2s">
       <div class="flex items-center gap-4">
         <span class="font-medium">Keyboard:</span>
         <span><kbd class="px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded text-xs">↑↓</kbd> Navigate</span>
@@ -255,15 +271,12 @@
           </div>
           <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-2">No todos yet</h3>
           <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Create your first task to get started</p>
-          <button
-            class="btn-primary"
-            onclick={() => inputEl?.focus()}
-          >
+          <Button variant="primary" onclick={() => inputEl?.focus()}>
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
             </svg>
             Add Your First Todo
-          </button>
+          </Button>
         </div>
       {/if}
       {/if}
