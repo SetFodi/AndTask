@@ -29,21 +29,23 @@
   
   const animatedValue = spring(0, { stiffness: 0.1, damping: 0.8 });
   
-  $: if (animated) {
-    animatedValue.set(value);
-  }
+  $effect(() => {
+    if (animated) {
+      animatedValue.set(value);
+    }
+  });
   
-  $: percentage = Math.min(Math.max((animated ? $animatedValue : value) / max * 100, 0), 100);
-  $: displayValue = Math.round(percentage);
+  let percentage = $derived(Math.min(Math.max((animated ? $animatedValue : value) / max * 100, 0), 100));
+  let displayValue = $derived(Math.round(percentage));
   
-  $: classes = [
+  let classes = $derived([
     'progress',
     `progress-${variant}`,
     `progress-${size}`,
     indeterminate && 'progress-indeterminate',
     gradient && 'progress-gradient',
     striped && 'progress-striped'
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean).join(' '));
 </script>
 
 <div class="progress-container">
@@ -70,6 +72,7 @@
 </div>
 
 <style>
+  @reference "../../app.css";
   .progress-container {
     @apply w-full;
   }
@@ -219,3 +222,4 @@
       transform: translateX(100%);
     }
   }
+</style>

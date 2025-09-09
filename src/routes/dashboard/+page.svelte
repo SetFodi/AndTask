@@ -78,17 +78,17 @@
   ]);
 </script>
 
-<div class=\"dashboard-container\">
-  <div class=\"dashboard-header\">
+<div class="dashboard-container">
+  <div class="dashboard-header">
     <div>
-      <h1 class=\"dashboard-title\">Dashboard</h1>
-      <p class=\"dashboard-subtitle\">Your productivity overview and insights</p>
+      <h1 class="dashboard-title">Dashboard</h1>
+      <p class="dashboard-subtitle">Your productivity overview and insights</p>
     </div>
-    <div class=\"dashboard-actions\">
-      <Badge variant=\"success\" dot pulse>Live</Badge>
-      <Button variant=\"ghost\" size=\"sm\">
-        <svg class=\"w-4 h-4 mr-2\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
-          <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\"/>
+    <div class="dashboard-actions">
+      <Badge variant="success" dot pulse>Live</Badge>
+      <Button variant="ghost" size="sm">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
         Refresh
       </Button>
@@ -96,127 +96,127 @@
   </div>
 
   {#if loading}
-    <div class=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8\">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {#each Array(4) as _}
-        <div class=\"card h-32\">
-          <div class=\"skeleton h-4 w-16 mb-2\"></div>
-          <div class=\"skeleton h-8 w-24 mb-2\"></div>
-          <div class=\"skeleton h-3 w-20\"></div>
+        <div class="rounded-2xl p-6 border h-32" style="background-color: var(--surface-a); border-color: var(--border-color); box-shadow: var(--shadow-sm);">
+          <div class="skeleton h-4 w-16 mb-2"></div>
+          <div class="skeleton h-8 w-24 mb-2"></div>
+          <div class="skeleton h-3 w-20"></div>
         </div>
       {/each}
     </div>
   {:else}
     <!-- Stats Cards -->
-    <div class=\"stats-grid\">
-      <div class=\"stat-card hover-lift\">
-        <div class=\"stat-header\">
-          <div class=\"stat-icon stat-icon-primary\">
-            <svg class=\"w-6 h-6\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-              <path fill-rule=\"evenodd\" d=\"M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z\" clip-rule=\"evenodd\"/>
+    <div class="stats-grid">
+      <div class="stat-card hover-lift">
+        <div class="stat-header">
+          <div class="stat-icon stat-icon-primary">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <Badge variant=\"primary\" size=\"sm\">Tasks</Badge>
+          <Badge variant="primary" size="sm">Tasks</Badge>
         </div>
-        <div class=\"stat-value\">{totalTasks}</div>
-        <div class=\"stat-subtitle\">Total tasks created</div>
-        <div class=\"stat-progress\">
-          <Progress value={completionRate} variant=\"success\" size=\"sm\" />
+        <div class="stat-value">{totalTasks}</div>
+        <div class="stat-subtitle">Total tasks created</div>
+        <div class="stat-progress">
+          <Progress value={completionRate} variant="success" size="sm" />
         </div>
       </div>
 
-      <div class=\"stat-card hover-lift\">
-        <div class=\"stat-header\">
-          <div class=\"stat-icon stat-icon-success\">
-            <svg class=\"w-6 h-6\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-              <path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\" clip-rule=\"evenodd\"/>
+      <div class="stat-card hover-lift">
+        <div class="stat-header">
+          <div class="stat-icon stat-icon-success">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <Badge variant=\"success\" size=\"sm\">Completed</Badge>
+          <Badge variant="success" size="sm">Completed</Badge>
         </div>
-        <div class=\"stat-value\">{completedTasks}</div>
-        <div class=\"stat-subtitle\">{completionRate.toFixed(1)}% completion rate</div>
-        <div class=\"stat-progress\">
-          <Progress value={completedTasks} max={totalTasks} variant=\"success\" size=\"sm\" />
+        <div class="stat-value">{completedTasks}</div>
+        <div class="stat-subtitle">{completionRate.toFixed(1)}% completion rate</div>
+        <div class="stat-progress">
+          <Progress value={completedTasks} max={totalTasks} variant="success" size="sm" />
         </div>
       </div>
 
-      <div class=\"stat-card hover-lift\">
-        <div class=\"stat-header\">
-          <div class=\"stat-icon stat-icon-info\">
-            <svg class=\"w-6 h-6\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-              <path d=\"M9 2a1 1 0 000 2h2a1 1 0 100-2H9z\"/>
-              <path fill-rule=\"evenodd\" d=\"M4 5a2 2 0 012-2v1a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2v1a2 2 0 012-2 2 2 0 012 2v6a4 4 0 01-4 4H6a4 4 0 01-4-4V5z\" clip-rule=\"evenodd\"/>
+      <div class="stat-card hover-lift">
+        <div class="stat-header">
+          <div class="stat-icon stat-icon-info">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+              <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2v1a2 2 0 012-2 2 2 0 012 2v6a4 4 0 01-4 4H6a4 4 0 01-4-4V5z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <Badge variant=\"info\" size=\"sm\">Notes</Badge>
+          <Badge variant="info" size="sm">Notes</Badge>
         </div>
-        <div class=\"stat-value\">{totalNotes}</div>
-        <div class=\"stat-subtitle\">{totalWords.toLocaleString()} total words</div>
-        <div class=\"stat-meta\">~{averageWordsPerNote} words per note</div>
+        <div class="stat-value">{totalNotes}</div>
+        <div class="stat-subtitle">{totalWords.toLocaleString()} total words</div>
+        <div class="stat-meta">~{averageWordsPerNote} words per note</div>
       </div>
 
-      <div class=\"stat-card hover-lift\">
-        <div class=\"stat-header\">
-          <div class=\"stat-icon stat-icon-warning\">
-            <svg class=\"w-6 h-6\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-              <path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z\" clip-rule=\"evenodd\"/>
+      <div class="stat-card hover-lift">
+        <div class="stat-header">
+          <div class="stat-icon stat-icon-warning">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <Badge variant=\"warning\" size=\"sm\">Today</Badge>
+          <Badge variant="warning" size="sm">Today</Badge>
         </div>
-        <div class=\"stat-value\">{todaysTasks.length}</div>
-        <div class=\"stat-subtitle\">Tasks created today</div>
-        <div class=\"stat-meta\">{thisWeeksTasks.length} this week</div>
+        <div class="stat-value">{todaysTasks.length}</div>
+        <div class="stat-subtitle">Tasks created today</div>
+        <div class="stat-meta">{thisWeeksTasks.length} this week</div>
       </div>
     </div>
 
     <!-- Activity Charts -->
-    <div class=\"grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8\">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- Weekly Progress Chart -->
-      <div class=\"card\">
-        <div class=\"chart-header\">
-          <h3 class=\"chart-title\">Weekly Activity</h3>
-          <Badge variant=\"primary\" outline size=\"sm\">Last 7 days</Badge>
+      <div class="rounded-2xl p-6 border" style="background-color: var(--surface-a); border-color: var(--border-color); box-shadow: var(--shadow-sm);">
+        <div class="chart-header">
+          <h3 class="chart-title">Weekly Activity</h3>
+          <Badge variant="primary" outline size="sm">Last 7 days</Badge>
         </div>
-        <div class=\"chart-container\">
+        <div class="chart-container">
           {#each weeklyProgress as day, i}
-            <div class=\"chart-bar-container\">
+            <div class="chart-bar-container">
               <div 
-                class=\"chart-bar\" 
-                style=\"height: {(day.completed / 15) * 100}%; animation-delay: {i * 100}ms\"
+                class="chart-bar" 
+                style="height: {(day.completed / 15) * 100}%; animation-delay: {i * 100}ms"
               ></div>
-              <div class=\"chart-label\">{day.day}</div>
-              <div class=\"chart-value\">{day.completed}</div>
+              <div class="chart-label">{day.day}</div>
+              <div class="chart-value">{day.completed}</div>
             </div>
           {/each}
         </div>
       </div>
 
       <!-- Recent Activity -->
-      <div class=\"card\">
-        <div class=\"chart-header\">
-          <h3 class=\"chart-title\">Recent Activity</h3>
-          <Badge variant=\"info\" outline size=\"sm\">Live feed</Badge>
+      <div class="rounded-2xl p-6 border" style="background-color: var(--surface-a); border-color: var(--border-color); box-shadow: var(--shadow-sm);">
+        <div class="chart-header">
+          <h3 class="chart-title">Recent Activity</h3>
+          <Badge variant="info" outline size="sm">Live feed</Badge>
         </div>
-        <div class=\"activity-feed\">
+        <div class="activity-feed">
           {#each todos.slice(0, 5) as todo}
-            <div class=\"activity-item animate-slide-up\" style=\"animation-delay: {Math.random() * 500}ms\">
-              <div class=\"activity-icon {todo.done ? 'activity-icon-success' : 'activity-icon-pending'}\">
+            <div class="activity-item animate-slide-up" style="animation-delay: {Math.random() * 500}ms">
+              <div class="activity-icon {todo.done ? 'activity-icon-success' : 'activity-icon-pending'}">
                 {#if todo.done}
-                  <svg class=\"w-3 h-3\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-                    <path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
                 {:else}
-                  <svg class=\"w-3 h-3\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-                    <path fill-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z\" clip-rule=\"evenodd\"/>
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                   </svg>
                 {/if}
               </div>
-              <div class=\"activity-content\">
-                <div class=\"activity-title\">{todo.text}</div>
-                <div class=\"activity-meta\">{formatDate(todo.created_at)} • {todo.done ? 'Completed' : 'Pending'}</div>
+              <div class="activity-content">
+                <div class="activity-title">{todo.text}</div>
+                <div class="activity-meta">{formatDate(todo.created_at)} • {todo.done ? 'Completed' : 'Pending'}</div>
               </div>
-              <Badge variant={todo.done ? 'success' : 'warning'} size=\"sm\">{todo.done ? 'Done' : 'Todo'}</Badge>
+              <Badge variant={todo.done ? 'success' : 'warning'} size="sm">{todo.done ? 'Done' : 'Todo'}</Badge>
             </div>
           {/each}
         </div>
@@ -225,7 +225,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Quick Actions -->
-      <div class="card">
+      <div class="rounded-2xl p-6 border" style="background-color: var(--surface-a); border-color: var(--border-color); box-shadow: var(--shadow-sm);">
         <div class="quick-actions-header">
           <h3 class="chart-title">Quick Actions</h3>
           <p class="chart-subtitle">Jump to your most used features</p>
@@ -256,7 +256,7 @@
       </div>
       
       <!-- Data Management -->
-      <div class="card">
+      <div class="rounded-2xl p-6 border" style="background-color: var(--surface-a); border-color: var(--border-color); box-shadow: var(--shadow-sm);">
         <div class="quick-actions-header">
           <h3 class="chart-title">Data Management</h3>
           <p class="chart-subtitle">Backup and restore your data securely</p>
@@ -278,7 +278,6 @@
             onExportComplete={() => console.log('Export completed')} 
             onImportComplete={(event) => {
               console.log('Import completed:', event.detail);
-              // Refresh dashboard data
               location.reload();
             }}
           />
@@ -289,6 +288,7 @@
 </div>
 
 <style>
+  @reference "../../app.css";
   .dashboard-container {
     @apply max-w-7xl mx-auto space-y-8;
   }
@@ -319,8 +319,13 @@
   }
   
   .stat-card {
-    @apply card relative overflow-hidden;
+    @apply relative overflow-hidden rounded-2xl p-6 border;
     background: linear-gradient(135deg, var(--surface-a) 0%, var(--surface-elevated) 100%);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--ease-spring);
+    position: relative;
+    overflow: hidden;
   }
   
   .stat-header {

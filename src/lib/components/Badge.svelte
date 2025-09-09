@@ -24,7 +24,7 @@
     onRemove?.();
   }
   
-  $: classes = [
+  let classes = $derived([
     'badge',
     `badge-${variant}`,
     `badge-${size}`,
@@ -32,7 +32,7 @@
     pulse && 'badge-pulse',
     outline && 'badge-outline',
     removable && 'badge-removable'
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean).join(' '));
 </script>
 
 <span class={classes}>
@@ -52,6 +52,7 @@
 </span>
 
 <style>
+  @reference "../../app.css";
   .badge {
     @apply inline-flex items-center justify-center font-medium rounded-full transition-all duration-200;
     white-space: nowrap;

@@ -14,6 +14,7 @@
 </div>
 
 <style>
+  @reference "../app.css";
   .loading-container {
     @apply flex flex-col items-center justify-center h-screen;
     color: var(--text-1);

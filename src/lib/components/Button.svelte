@@ -64,7 +64,7 @@
     }, 600);
   }
   
-  $: classes = [
+  let classes = $derived([
     'btn',
     `btn-${variant}`,
     `btn-${size}`,
@@ -72,7 +72,7 @@
     fullWidth && 'btn-full-width',
     loading && 'btn-loading',
     disabled && 'btn-disabled'
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean).join(' '));
 </script>
 
 <button
@@ -95,6 +95,7 @@
 </button>
 
 <style>
+  @reference "../../app.css";
   .btn {
     @apply relative inline-flex items-center justify-center font-medium transition-all duration-300 outline-none overflow-hidden;
     border-radius: var(--radius-md);
